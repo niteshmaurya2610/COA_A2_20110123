@@ -1,0 +1,97 @@
+// reference - https://godbolt.org/
+
+// C code
+
+#include <stdio.h>
+#include <time.h>
+#include <stdint.h>
+
+int main() {
+double time;
+time = clock();
+  int i;
+  unsigned long long t1 = 0, t2 = 1;
+  unsigned long long n = t1 + t2;
+  printf("First 100 Fibonacci numbers are  : %d, %d, ", t1, t2);
+  for (i = 3; i < 94; i++) {
+    printf("%llu, ", n);
+    t1 = t2;
+    t2 = n;
+    n = t1 + t2;
+  }
+    int t3,t4,n1;
+    t3 = t1%1000; t4 = t2%1000;
+    t1 = t1/1000;
+    t2 = t2/1000;
+    n = n/1000;
+    n1 = t3+t4;
+    if (n1>999){
+        n++;
+    }
+  for (i = 94; i < 101; i++) {
+    printf("%llu%.3d, ", n,n1);
+    t1 = t2;
+    t2 = n;
+    n = t1 + t2;
+    t3 = t4;
+    t4 = n1;
+    n1 = t3 + t4;
+     if (n1>999){
+        n++;
+        n1 = n1 % 1000;
+    }
+  }
+  time = clock() - time;
+  time = time/CLOCKS_PER_SEC;
+  printf("\n");
+  printf("   Total CPU time is %f seconds.", time);
+  return 0;
+}
+
+// Assembly Code
+
+lw      $2,0($4)
+        lw      $9,16($sp)
+        sw      $2,0($6)
+        sw      $0,0($7)
+        lw      $2,0($4)
+        lw      $11,20($sp)
+        sw      $2,0($9)
+        move    $3,$0
+        sw      $0,0($11)
+        li      $10,101           # 0x65
+$L4:
+        lw      $2,0($4)
+        lw      $8,0($6)
+        nop
+        slt     $8,$2,$8
+        bne     $8,$0,$L2
+        nop
+
+        sw      $2,0($6)
+        sw      $3,0($7)
+        lw      $2,0($4)
+$L2:
+        lw      $8,0($9)
+        nop
+        slt     $8,$8,$2
+        bne     $8,$0,$L3
+        nop
+
+        sw      $2,0($9)
+        sw      $3,0($11)
+        lw      $2,0($4)
+$L3:
+        lw      $8,0($5)
+        addiu   $3,$3,1
+        addu    $2,$2,$8
+        sw      $2,0($5)
+        bne     $3,$10,$L4
+        addiu   $4,$4,4
+
+        bne     $3,$0,1f
+        div     $0,$2,$3
+        break   7
+        mflo    $2
+        j       $31
+        sw      $2,0($5)
